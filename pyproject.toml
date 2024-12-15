@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "llama-podcast"
+version = "0.1.0"
+description = ""
+authors = ["csh <458761603@qq.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.32.3"
+gradio = "^5.9.0"
+openai = "^1.57.4"
+soundfile = "^0.12.1"
+sound = "^0.1.0"
+numpy = "^2.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
