@@ -93,8 +93,8 @@ with gr.Blocks() as demo:
                 value=default_sys_prompt1,
             )
             input_prompt = gr.TextArea(label="文本内容")
-            output1 = gr.TextArea(label="LLM Output", value="")
             button = gr.Button(value="开始生成")
+            output1 = gr.TextArea(label="LLM Output", value="")
 
             @gr.on(
                 triggers=[button.click],
@@ -138,10 +138,10 @@ with gr.Blocks() as demo:
                 value=default_sys_prompt2,
             )
             input_prompt = gr.TextArea(label="文本内容", value=output1.value)
-            output2 = gr.TextArea(label="LLM Output")
             update_btn = gr.Button(value="刷新演讲稿")
-            update_btn.click(lambda x: x, inputs=[output1], outputs=[input_prompt])
             button = gr.Button(value="开始生成")
+            output2 = gr.TextArea(label="LLM Output")
+            update_btn.click(lambda x: x, inputs=[output1], outputs=[input_prompt])
 
             @gr.on(
                 triggers=[button.click],
