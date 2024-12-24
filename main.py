@@ -139,6 +139,8 @@ with gr.Blocks() as demo:
             )
             input_prompt = gr.TextArea(label="文本内容", value=output1.value)
             output2 = gr.TextArea(label="LLM Output")
+            update_btn = gr.Button(value="刷新演讲稿")
+            update_btn.click(lambda x: x, inputs=[output1], outputs=[input_prompt])
             button = gr.Button(value="开始生成")
 
             @gr.on(
