@@ -184,9 +184,14 @@ with gr.Blocks() as demo:
                 label="TTS BaseURL",
                 value="http://localhost:8080/v1/audio/speech_gpt",
             )
-            speaker1 = gr.Textbox(label="Speaker1", value="speaker1")
-            speaker2 = gr.Textbox(label="Speaker2", value="speaker2")
-
+            
+            if lang == "zh":
+                speaker1 = gr.Textbox(label="Speaker1", value="speaker1")
+                speaker2 = gr.Textbox(label="Speaker2", value="speaker2")
+            else:
+                speaker1 = gr.Textbox(label="Speaker1", value="cooper")
+                speaker2 = gr.Textbox(label="Speaker2", value="kelly")
+    
             text_input = gr.TextArea(label="演讲稿", value="")
             update_btn = gr.Button(value="刷新演讲稿")
             update_btn.click(lambda x: x, inputs=[output2], outputs=[text_input])
