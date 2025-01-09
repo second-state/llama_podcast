@@ -186,8 +186,8 @@ with gr.Blocks() as demo:
             )
             
             if lang == "zh":
-                speaker1 = gr.Textbox(label="Speaker1", value="speaker1")
-                speaker2 = gr.Textbox(label="Speaker2", value="speaker2")
+                speaker1 = gr.Textbox(label="Speaker1", value="cctv_male_anchor")
+                speaker2 = gr.Textbox(label="Speaker2", value="cctv_female_anchor")
             else:
                 speaker1 = gr.Textbox(label="Speaker1", value="cooper")
                 speaker2 = gr.Textbox(label="Speaker2", value="kelly")
