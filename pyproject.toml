@@ -6,13 +6,16 @@ authors = ["csh <458761603@qq.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 requests = "^2.32.3"
 gradio = "^5.9.0"
 openai = "^1.57.4"
 soundfile = "^0.12.1"
 sound = "^0.1.0"
-numpy = "^2.2.0"
+numpy = "1.26"
+python-dotenv = "^1.0.1"
+gpt-researcher = "^0.10.11"
+loguru = "^0.7.3"
 
 
 [build-system]

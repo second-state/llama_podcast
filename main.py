@@ -129,8 +129,11 @@ with gr.Blocks() as demo:
                 )
                 outputs = ""
                 for chunk in response:
-                    outputs += chunk.choices[0].delta.content
-                    yield outputs
+                    if chunk.choices[0].delta.content != None:
+                        outputs += chunk.choices[0].delta.content
+                        yield outputs
+                    else:
+                        return outputs
 
         with gr.Tab("2. 润色演讲稿"):
             llm_sys_prompt = gr.TextArea(
@@ -176,8 +179,11 @@ with gr.Blocks() as demo:
                 )
                 outputs = ""
                 for chunk in response:
-                    outputs += chunk.choices[0].delta.content
-                    yield outputs
+                    if chunk.choices[0].delta.content != None:
+                        outputs += chunk.choices[0].delta.content
+                        yield outputs
+                    else:
+                        return outputs
 
         with gr.Tab("3. 生成播客 TTS"):
             tts_base_url = gr.Textbox(
