@@ -316,8 +316,7 @@ def auto_file_podcast_(event_handler):
     current_version = event_handler.version
     logger.info("Starting auto podcast from file {}", current_version)
     if not os.path.exists("./topics_paths"):
-        logger.error("./topics_paths does not exist")
-        return
+        os.open("./topics_paths", os.O_CREAT)
 
     with open("./topics_paths", "r") as file:
         topics = [p.strip().split(",") for p in file.readlines()]
