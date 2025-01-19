@@ -261,14 +261,20 @@ class MyHandler(FileSystemEventHandler):
     def __init__(self):
         super().__init__()
         self.condition = threading.Condition()
+        self.trigger = ""
         self.version = 0
 
     def on_modified(self, event):
         if not event.is_directory:
             logger.info(f"File {event.src_path} has been {event.event_type}")
-            self.version += 1
-            with self.condition:
-                self.condition.notify()
+            with open("./trigger", "r") as file:
+                trigger = file.read()
+            if trigger != self.trigger:
+                self.trigger = trigger
+                self.version += 1
+                logger.info(f"Trigger updated to {self.trigger}")
+                with self.condition:
+                    self.condition.notify()
 
 
 def auto_hot_search_podcast():
