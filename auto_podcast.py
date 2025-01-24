@@ -203,31 +203,19 @@ def push_to_streaming_service_from_file(streaming_list_path):
 
 
 def auto_podcast(path, start_step=0, end_step=4):
-    if start_step <= 0 and 0 <= end_step:
+    steps = [
+        create_report_from_file,
+        create_script_from_file,
+        create_optimized_script_from_file,
+        create_voice_from_file,
+        push_to_streaming_service_from_file,
+    ]
+
+    for i in range(start_step, end_step + 1):
         if path is None or not os.path.exists(path):
-            logger.error(f"File {path} does not exist")
+            logger.error(f"File {path} does not exist in step {i}")
             return
-        path = create_report_from_file(path)
-    if start_step <= 1 and 1 <= end_step:
-        if path is None or not os.path.exists(path):
-            logger.error(f"File {path} does not exist")
-            return
-        path = create_script_from_file(path)
-    if start_step <= 2 and 2 <= end_step:
-        if path is None or not os.path.exists(path):
-            logger.error(f"File {path} does not exist")
-            return
-        path = create_optimized_script_from_file(path)
-    if start_step <= 3 and 3 <= end_step:
-        if path is None or not os.path.exists(path):
-            logger.error(f"File {path} does not exist")
-            return
-        path = create_voice_from_file(path)
-    if start_step <= 4 and 4 <= end_step:
-        if path is None or not os.path.exists(path):
-            logger.error(f"File {path} does not exist")
-            return
-        push_to_streaming_service_from_file(path)
+        path = steps[i](path)
 
 
 def try_push_to_streaming_service(streaming_list):
