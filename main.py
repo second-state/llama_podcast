@@ -6,6 +6,10 @@ import json
 import soundfile as sf
 import numpy as np
 import os
+import dotenv
+
+dotenv.load_dotenv()
+
 
 opt = gr.WaveformOptions()
 opt.sample_rate = 16000
@@ -65,7 +69,7 @@ def merge_audio():
     return "./output/podcast.wav"
 
 
-lang = os.environ.get("LANG", "zh")
+lang = os.environ.get("PODCAST_LANG", "zh")
 if lang == "zh":
     default_sys_prompt1 = llama_podcast.CN_SYSTEMP_PROMPT_1
     default_sys_prompt2 = llama_podcast.CN_SYSTEMP_PROMPT_2
