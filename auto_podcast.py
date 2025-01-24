@@ -174,19 +174,20 @@ def create_optimized_script_from_file(script_path):
     dir_id = os.path.dirname(script_path)
     script_path = os.path.join(dir_id, "script.json")
     output = generate_llm(llm_model, default_sys_prompt2, llm_input)
+
+    with open(os.path.join(dir_id, "script.debug.json"), "w") as file:
+        file.write(output)
+
     lines = iter(output.split("\n"))
     script = []
-    while True:
-        try:
-            speaker = next(lines)
-            if speaker != "Speaker 1" and speaker != "Speaker 2":
-                break
-            text = next(lines)
-            if text == "Speaker 1" or text == "Speaker 2":
-                break
-            script.append((speaker, text))
-        except StopIteration:
-            break
+    for line in lines:
+        if line.startswith("Speaker 1|"):
+            speaker1_text = line.removeprefix("Speaker 1|")
+            script.append(("Speaker 1", speaker1_text))
+        elif line.startswith("Speaker 2|"):
+            speaker2_text = line.removeprefix("Speaker 2|")
+            script.append(("Speaker 2", speaker2_text))
+
     if len(script) == 0:
         return None
 

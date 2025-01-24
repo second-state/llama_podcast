@@ -214,17 +214,13 @@ with gr.Blocks() as demo:
                 with gr.Column("tts_inputs") as col:
                     lines = iter(input.split("\n"))
                     script = []
-                    while True:
-                        try:
-                            speaker = next(lines)
-                            if speaker != "Speaker 1" and speaker != "Speaker 2":
-                                break
-                            text = next(lines)
-                            if text == "Speaker 1" or text == "Speaker 2":
-                                break
-                            script.append((speaker, text))
-                        except StopIteration:
-                            break
+                    for line in lines:
+                        if line.startswith("Speaker 1|"):
+                            speaker1_text = line.removeprefix("Speaker 1|")
+                            script.append(("Speaker 1", speaker1_text))
+                        elif line.startswith("Speaker 2|"):
+                            speaker2_text = line.removeprefix("Speaker 2|")
+                            script.append(("Speaker 2", speaker2_text))
 
                     set_tts_inputs(script)
                     for i, text in enumerate(script):
