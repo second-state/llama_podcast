@@ -21,6 +21,11 @@ else:
     default_sys_prompt1 = llama_podcast.EN_SYSTEMP_PROMPT_1
     default_sys_prompt2 = llama_podcast.EN_SYSTEMP_PROMPT_2
 
+script_path = os.environ.get("SCRIPT_PROMPT", None)
+if script_path is not None and os.path.exists(script_path):
+    with open(script_path, "r") as file:
+        default_sys_prompt1 = file.read()
+
 api_key = os.environ.get("OPENAI_API_KEY", "NA")
 base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
@@ -169,8 +174,25 @@ def create_optimized_script_from_file(script_path):
     dir_id = os.path.dirname(script_path)
     script_path = os.path.join(dir_id, "script.json")
     output = generate_llm(llm_model, default_sys_prompt2, llm_input)
+    lines = iter(output.split("\n"))
+    script = []
+    while True:
+        try:
+            speaker = next(lines)
+            if speaker != "Speaker 1" and speaker != "Speaker 2":
+                break
+            text = next(lines)
+            if text == "Speaker 1" or text == "Speaker 2":
+                break
+            script.append((speaker, text))
+        except StopIteration:
+            break
+    if len(script) == 0:
+        return None
+
     with open(script_path, "w") as file:
-        file.write(output)
+        file.write(json.dumps(script, ensure_ascii=False, indent=4))
+
     return script_path
 
 
@@ -257,7 +279,7 @@ class MyHandler(FileSystemEventHandler):
         self.trigger = ""
         self.version = 0
 
-    def on_modified(self, event):
+    def on_closed(self, event):
         if not event.is_directory:
             logger.info(f"File {event.src_path} has been {event.event_type}")
             with open("./trigger", "r") as file:
@@ -320,6 +342,9 @@ def auto_file_podcast_(event_handler):
     with open("./topics_paths", "r") as file:
         topics = [p.strip().split(",") for p in file.readlines()]
     for topic in topics:
+        if len(topic) != 2:
+            logger.error(f"Invalid topic {topic}")
+            continue
         auto_podcast(topic[1], int(topic[0]))
         if event_handler.version != current_version:
             return

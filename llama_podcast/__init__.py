@@ -58,20 +58,22 @@ Speaker 2: 通过提出后续问题来保持对话流畅，提问时表现出极
 确保Speaker 2提供的话题偏离点要足够狂野或有趣。
 确保解释过程中适当打断，并从Speaker 2那里加入“嗯”和“哈”之类的声音反应。
 要牢记这一点：Speaker 1的TTS引擎不太能处理“嗯、哈”，请保持文本简洁；
-对于Speaker 2，请多用“嗯、哈”，也可以使用[诶]和[哎]和[哈哈哈]等表达，但仅限这些选项；
+对于Speaker 2，请多用“嗯、哈”，仅限这些选项；
 整个播客要尽量详细记录每个细节。欢迎听众时用一个超级有趣的概述，使其非常吸引人，几乎像是边缘点击诱饵一样；
 请重写以上内容，使其更加独特；
-从扬声器1直接开始响应：
-严格按照JSON列表格式返回您的回应，可以吗？  
-开头就是列表，以列表结束，不附加任何其他内容。
+从Speaker 1直接开始响应：
+严格按照 一行speaker一行内容的 列表格式返回您的回应，可以吗？  
+不附加任何其他内容。
 
 输出的例子:
-[
-    ["Speaker 1", "欢迎收听我们的播客，我们将探讨人工智能和科技的最新进展。我是你的主播，今天我们请到了一位著名的人工智能专家。我们将深入了解Meta AI最新发布的Llama 3.2。"],
-    ["Speaker 2", "你好，很高兴来到这里！请问，Llama 3.2是什么呀？"],
-    ["Speaker 1", "哈哈哈，这个问题很好！Llama 3.2 是一个开源的大语言模型，允许开发者进行微调、提炼和在任何地方部署AI模型。这是比上一版本3.1显著改进的更新，拥有更好的性能、效率和定制功能。"],
-    ["Speaker 2", "哇塞，这也太牛逼了吧！Llama 3.2的主要特点有哪些？"]
-]
+Speaker 1
+欢迎收听我们的播客，我们将探讨人工智能和科技的最新进展。我是你的主播，今天我们请到了一位著名的人工智能专家。我们将深入了解Meta AI最新发布的Llama 3.2。
+Speaker 2
+你好，很高兴来到这里！请问，Llama 3.2是什么呀？"],
+Speaker 1
+哈哈哈，这个问题很好！Llama 3.2 是一个开源的大语言模型，允许开发者进行微调、提炼和在任何地方部署AI模型。这是比上一版本3.1显著改进的更新，拥有更好的性能、效率和定制功能。
+Speaker 2"
+哇塞，这也太牛逼了吧！Llama 3.2的主要特点有哪些？
 """
 
 EN_SYSTEMP_PROMPT_2 = """
@@ -104,15 +106,17 @@ Please re-write to make it as characteristic as possible
 
 START YOUR RESPONSE DIRECTLY WITH SPEAKER 1:
 
-STRICTLY RETURN YOUR RESPONSE AS A LIST OF TUPLES OK? 
-
-IT WILL START DIRECTLY WITH THE LIST AND END WITH THE LIST NOTHING ELSE
+Return your response strictly in a list format with one line for the speaker’s name and one line for the content, without adding any other content.
 
 Example of response:
-[
-    ["Speaker 1", "Welcome to our podcast, where we explore the latest advancements in AI and technology. I'm your host, and today we're joined by a renowned expert in the field of AI. We're going to dive into the exciting world of Llama 3.2, the latest release from Meta AI."],
-    ["Speaker 2", "Hi, I'm excited to be here! So, what is Llama 3.2?"],
-    ["Speaker 1", "Ah, great question! Llama 3.2 is an open-source AI model that allows developers to fine-tune, distill, and deploy AI models anywhere. It's a significant update from the previous version, with improved performance, efficiency, and customization options."],
-    ["Speaker 2", "That sounds amazing! What are some of the key features of Llama 3.2?"]
-]
+
+Speaker 1
+Welcome to our podcast, where we explore the latest advancements in AI and technology. I'm your host, and today we're joined by a renowned expert in the field of AI. We're going to dive into the exciting world of Llama 3.2, the latest release from Meta AI.
+Speaker 2
+Hi, I'm excited to be here! So, what is Llama 3.2?
+Speaker 1
+Ah, great question! Llama 3.2 is an open-source AI model that allows developers to fine-tune, distill, and deploy AI models anywhere. It's a significant update from the previous version, with improved performance, efficiency, and customization options.
+Speaker 2
+That sounds amazing! What are some of the key features of Llama 3.2?
+
 """

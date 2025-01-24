@@ -212,12 +212,22 @@ with gr.Blocks() as demo:
             def update_tts_input(input, _label):
 
                 with gr.Column("tts_inputs") as col:
-                    try:
-                        texts = json.loads(input)
-                    except:
-                        texts = []
-                    set_tts_inputs(texts)
-                    for i, text in enumerate(texts):
+                    lines = iter(input.split("\n"))
+                    script = []
+                    while True:
+                        try:
+                            speaker = next(lines)
+                            if speaker != "Speaker 1" and speaker != "Speaker 2":
+                                break
+                            text = next(lines)
+                            if text == "Speaker 1" or text == "Speaker 2":
+                                break
+                            script.append((speaker, text))
+                        except StopIteration:
+                            break
+
+                    set_tts_inputs(script)
+                    for i, text in enumerate(script):
                         speaker, text = text
                         with gr.Row():
                             index = gr.Textbox(label="Index", value=str(i))
