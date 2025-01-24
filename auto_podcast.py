@@ -328,7 +328,11 @@ def auto_hot_search_podcast():
             logger.info(f"Writing query to {query_path}")
             with open(query_path, "w") as file:
                 file.write(topic)
-            auto_podcast(query_path)
+            try:
+                auto_podcast(query_path)
+            except Exception as e:
+                logger.error(f"Failed to auto podcast from {query_path}")
+                logger.error(e)
             i += 1
             time.sleep(sleep_sec)
 
@@ -345,7 +349,11 @@ def auto_file_podcast_(event_handler):
         if len(topic) != 2:
             logger.error(f"Invalid topic {topic}")
             continue
-        auto_podcast(topic[1], int(topic[0]))
+        try:
+            auto_podcast(topic[1], int(topic[0]))
+        except Exception as e:
+            logger.error(f"Failed to auto podcast from {topic[1]}")
+            logger.error(e)
         if event_handler.version != current_version:
             return
         time.sleep(sleep_sec)
