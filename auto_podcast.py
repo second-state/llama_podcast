@@ -33,6 +33,8 @@ else:
 
 vtb_speaker1 = os.environ.get("VTB_SPEAKER1", "speaker1")
 vtb_speaker2 = os.environ.get("VTB_SPEAKER2", "speaker2")
+vtb_speaker1_motion = os.environ.get("VTB_SPEAKER1_MOTION", "")
+vtb_speaker2_motion = os.environ.get("VTB_SPEAKER2_MOTION", "")
 
 tts_base_url = os.environ.get("TTS_BASE_URL")
 
@@ -226,15 +228,18 @@ def try_push_to_streaming_service(streaming_list):
     for speaker, text, audio in streaming_list:
         if speaker == "Speaker 1":
             vtb_name = vtb_speaker1
+            motion = vtb_speaker1_motion
         else:
             vtb_name = vtb_speaker2
+            motion = vtb_speaker2_motion
+
         logger.debug(f"Pushing {vtb_name} to {streaming_server_base_url}")
         logger.debug(f"Text: {text}")
         logger.debug(f"Audio: {audio}")
 
         response = requests.post(
             streaming_server_base_url,
-            data={"vtb_name": vtb_name, "text": text},
+            data={"vtb_name": vtb_name, "text": text, "motion": motion},
             files={"voice": (audio, open(audio, "rb"))},
         )
         logger.debug(response.status_code)
