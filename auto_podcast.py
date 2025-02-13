@@ -1,4 +1,5 @@
 import argparse
+from fish_audio_sdk import Session, TTSRequest
 from gpt_researcher import GPTResearcher
 from loguru import logger
 import requests
@@ -36,8 +37,8 @@ if lang == "zh":
     speaker1 = os.environ.get("SPEAKER1", "cctv_male_anchor")
     speaker2 = os.environ.get("SPEAKER2", "cctv_female_anchor")
 else:
-    speaker1 = os.environ.get("SPEAKER1", "cooper")
-    speaker2 = os.environ.get("SPEAKER2", "kelly")
+    speaker1 = os.environ.get("SPEAKER1", "256e1a3007a74904a91d132d1e9bf0aa")
+    speaker2 = os.environ.get("SPEAKER2", "0fb74894823f483c9b2f27cabaad841d")
 
 vtb_speaker1 = os.environ.get("VTB_SPEAKER1", "speaker1")
 vtb_speaker2 = os.environ.get("VTB_SPEAKER2", "speaker2")
@@ -65,6 +66,26 @@ def tts(base_url, speaker, text):
         logger.error(f"Failed to get audio from {base_url}")
         logger.error(f"Response: {response.text}")
         return None
+
+
+fish_api_key = os.environ.get("FISH_API_KEY")
+if fish_api_key is not None:
+    session = Session(fish_api_key)
+else:
+    session = None
+
+
+def fish_tts(speaker, text, wav_path):
+    with open(wav_path, "wb") as f:
+        for chunk in session.tts(
+            TTSRequest(
+                format="wav",
+                reference_id=speaker,
+                text=text,
+            )
+        ):
+            f.write(chunk)
+    return wav_path
 
 
 def generate_llm(
@@ -104,6 +125,25 @@ def generate_voice_with_list(script, speaker1, speaker2):
             audio = tts(tts_base_url, speaker1, text)
         else:
             audio = tts(tts_base_url, speaker2, text)
+        if audio is None:
+            logger.error(f"Failed to generate audio for {speaker}")
+            return None
+        logger.info(f"Generated audio for {speaker} ({i+1}/{script_size})")
+        output.append((speaker, text, audio))
+
+    return output
+
+
+def generate_voice_with_list_fish(script, speaker1, speaker2, dir_path):
+    output = []
+    script_size = len(script)
+    for i, text in enumerate(script):
+        speaker, text = text
+        wav_path = os.path.join(dir_path, f"segments_{i}.wav")
+        if speaker == "Speaker 1":
+            audio = fish_tts(speaker1, text, wav_path)
+        else:
+            audio = fish_tts(speaker2, text, wav_path)
         if audio is None:
             logger.error(f"Failed to generate audio for {speaker}")
             return None
@@ -221,6 +261,18 @@ def create_voice(script, dir_path):
     return streaming_list_path
 
 
+def create_voice_fish(script, dir_path):
+    logger.info(f"Creating voice Fish")
+
+    streaming_list = generate_voice_with_list_fish(script, speaker1, speaker2, dir_path)
+
+    streaming_list_path = os.path.join(dir_path, "streaming_list.json")
+    with open(streaming_list_path, "w") as file:
+        file.write(json.dumps(streaming_list, ensure_ascii=False, indent=4))
+
+    return streaming_list_path
+
+
 def push_to_streaming_service_from_file(streaming_list_path):
     logger.info(f"Pushing to streaming service from file {streaming_list_path}")
     with open(streaming_list_path, "r") as file:
@@ -246,7 +298,12 @@ def auto_podcast(path):
 
         if script is None:
             return None
-        streaming_list_path = create_voice(script, sub_topic_path)
+
+        if lang == "en" and fish_api_key is not None:
+            streaming_list_path = create_voice_fish(script, sub_topic_path)
+        else:
+            streaming_list_path = create_voice(script, sub_topic_path)
+
         if streaming_list_path is None:
             return None
         push_to_streaming_service_from_file(streaming_list_path)
