@@ -1,3 +1,4 @@
+import argparse
 from gpt_researcher import GPTResearcher
 from loguru import logger
 import requests
@@ -15,9 +16,11 @@ dotenv.load_dotenv()
 
 lang = os.environ.get("PODCAST_LANG", "zh")
 if lang == "zh":
+    default_sys_prompt0 = llama_podcast.CN_SYSTEMP_PROMPT_0
     default_sys_prompt1 = llama_podcast.CN_SYSTEMP_PROMPT_1
     default_sys_prompt2 = llama_podcast.CN_SYSTEMP_PROMPT_2
 else:
+    default_sys_prompt0 = llama_podcast.EN_SYSTEMP_PROMPT_0
     default_sys_prompt1 = llama_podcast.EN_SYSTEMP_PROMPT_1
     default_sys_prompt2 = llama_podcast.EN_SYSTEMP_PROMPT_2
 
@@ -91,16 +94,11 @@ def generate_llm(
     return outputs
 
 
-def generate_voice(llm_input, speaker1, speaker2):
-    try:
-        texts = json.loads(llm_input)
-    except:
-        logger.error("Failed to parse input")
-        return None
+def generate_voice_with_list(script, speaker1, speaker2):
 
-    text_len = len(texts)
     output = []
-    for i, text in enumerate(texts):
+    script_size = len(script)
+    for i, text in enumerate(script):
         speaker, text = text
         if speaker == "Speaker 1":
             audio = tts(tts_base_url, speaker1, text)
@@ -109,10 +107,20 @@ def generate_voice(llm_input, speaker1, speaker2):
         if audio is None:
             logger.error(f"Failed to generate audio for {speaker}")
             return None
-        logger.info(f"Generated audio for {speaker} ({i+1}/{text_len})")
+        logger.info(f"Generated audio for {speaker} ({i+1}/{script_size})")
         output.append((speaker, text, audio))
 
     return output
+
+
+def generate_voice(llm_input, speaker1, speaker2):
+    try:
+        texts = json.loads(llm_input)
+    except:
+        logger.error("Failed to parse input")
+        return None
+
+    return generate_voice_with_list(texts, speaker1, speaker2)
 
 
 async def get_news_from_web(query):
@@ -152,68 +160,61 @@ def create_report_from_file(query_path):
     return report_path
 
 
-def create_script_from_file(text_path):
-    logger.info(f"Creating script from file {text_path}")
-    with open(text_path, "r") as file:
-        report = file.read()
-    llm_input = generate_llm(llm_model, default_sys_prompt1, report)
+def split_sub_topic(article):
+    logger.info(f"Split Sub Topic from article")
+    llm_input = generate_llm(llm_model, default_sys_prompt0, article)
     if llm_input is None:
         return None
-    dir_id = os.path.dirname(text_path)
-    script_path = os.path.join(dir_id, "script.txt")
-    with open(script_path, "w") as file:
-        file.write(llm_input)
-    return script_path
+    sub_topics = []
+    topics = llm_input.split("\n")
+    for i, topic in enumerate(topics):
+        if topic.strip() == "":
+            continue
+        sub_topics.append(topic)
+    return sub_topics
 
 
-def create_optimized_script_from_file(script_path):
-    logger.info(f"Creating optimized script from file {script_path}")
-    with open(script_path, "r") as file:
-        llm_input = file.read()
+def create_script(article, topic):
+    logger.info(f"Creating script with topic {topic}")
 
-    dir_id = os.path.dirname(script_path)
-    script_path = os.path.join(dir_id, "script.json")
-    output = generate_llm(llm_model, default_sys_prompt2, llm_input)
-
-    with open(os.path.join(dir_id, "script.debug.json"), "w") as file:
-        file.write(output)
-
-    lines = iter(output.split("\n"))
-    script = []
-    for line in lines:
-        if line.startswith("Speaker 1|"):
-            speaker1_text = line.removeprefix("Speaker 1|")
-            script.append(("Speaker 1", speaker1_text))
-        elif line.startswith("Speaker 2|"):
-            speaker2_text = line.removeprefix("Speaker 2|")
-            script.append(("Speaker 2", speaker2_text))
-
-    if len(script) == 0:
+    llm_input = generate_llm(
+        llm_model,
+        default_sys_prompt1 + "\n<article>\n" + article + "\n</article>",
+        topic,
+    )
+    if llm_input is None:
         return None
+    script = []
+    lines = iter(llm_input.split("\n"))
+    for line in lines:
+        if line.strip() == "":
+            continue
+        if line.startswith("Speaker 1:"):
+            speaker1_text = line.removeprefix("Speaker 1:")
+            script.append(["Speaker 1", speaker1_text])
+        elif line.startswith("Speaker 2:"):
+            speaker2_text = line.removeprefix("Speaker 2:")
+            script.append(["Speaker 2", speaker2_text])
+        else:
+            if len(script) > 0:
+                script[-1][1] += "\n" + line
+    return script
 
-    with open(script_path, "w") as file:
-        file.write(json.dumps(script, ensure_ascii=False, indent=4))
 
-    return script_path
+def create_voice(script, dir_path):
+    logger.info(f"Creating voice")
 
-
-def create_voice_from_file(script_path):
-    logger.info(f"Creating voice from file {script_path}")
-
-    with open(script_path, "r") as file:
-        script = file.read()
-    voice = generate_voice(script, speaker1, speaker2)
+    voice = generate_voice_with_list(script, speaker1, speaker2)
     if voice is None:
         return None
-    dir_id = os.path.dirname(script_path)
     streaming_list = []
     for i, (speaker, text, audio) in enumerate(voice):
-        wav_path = os.path.join(dir_id, f"segments_{i}.wav")
+        wav_path = os.path.join(dir_path, f"segments_{i}.wav")
         with open(wav_path, "wb") as file:
             file.write(audio)
         streaming_list.append((speaker, text, wav_path))
 
-    streaming_list_path = os.path.join(dir_id, "streaming_list.json")
+    streaming_list_path = os.path.join(dir_path, "streaming_list.json")
     with open(streaming_list_path, "w") as file:
         file.write(json.dumps(streaming_list, ensure_ascii=False, indent=4))
 
@@ -227,20 +228,28 @@ def push_to_streaming_service_from_file(streaming_list_path):
     try_push_to_streaming_service(streaming_list)
 
 
-def auto_podcast(path, start_step=0, end_step=4):
-    steps = [
-        create_report_from_file,
-        create_script_from_file,
-        create_optimized_script_from_file,
-        create_voice_from_file,
-        push_to_streaming_service_from_file,
-    ]
+def auto_podcast(path):
+    with open(path, "r") as file:
+        article = file.read()
 
-    for i in range(start_step, end_step + 1):
-        if path is None or not os.path.exists(path):
-            logger.error(f"File {path} does not exist in step {i}")
-            return
-        path = steps[i](path)
+    dir_path = os.path.dirname(path)
+
+    sub_topics = split_sub_topic(article)
+    if sub_topics is None:
+        return None
+    # logger.info(f"Sub Topics: {sub_topics}")
+    for i, sub_topic in enumerate(sub_topics):
+        script = create_script(article, sub_topic)
+        sub_topic_path = os.path.join(dir_path, f"sub_topic_{i}")
+        if not os.path.exists(sub_topic_path):
+            os.makedirs(sub_topic_path)
+
+        if script is None:
+            return None
+        streaming_list_path = create_voice(script, sub_topic_path)
+        if streaming_list_path is None:
+            return None
+        push_to_streaming_service_from_file(streaming_list_path)
 
 
 def try_push_to_streaming_service(streaming_list):
@@ -351,7 +360,7 @@ def auto_file_podcast_(event_handler):
             logger.error(f"Invalid topic {topic}")
             continue
         try:
-            auto_podcast(topic[1], int(topic[0]))
+            auto_podcast(topic[1])
         except Exception as e:
             logger.error(f"Failed to auto podcast from {topic[1]}")
             logger.error(e)
@@ -380,5 +389,12 @@ def auto_file_podcast():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Auto Podcast")
+    parser.add_argument(
+        "files", metavar="FILE", type=str, nargs="+", help="a file to be processed"
+    )
+
+    args = parser.parse_args()
     # auto_hot_search_podcast()
-    auto_file_podcast()
+    for file_path in args.files:
+        auto_podcast(file_path)
