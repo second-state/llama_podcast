@@ -307,6 +307,7 @@ def auto_podcast(path):
         if streaming_list_path is None:
             return None
         push_to_streaming_service_from_file(streaming_list_path)
+        time.sleep(sleep_sec)
 
 
 def try_push_to_streaming_service(streaming_list):
