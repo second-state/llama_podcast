@@ -455,4 +455,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # auto_hot_search_podcast()
     for file_path in args.files:
-        auto_podcast(file_path)
+        try:
+            auto_podcast(file_path)
+        except Exception as e:
+            logger.error(f"Failed to auto podcast from {file_path}")
+            logger.error(e)
