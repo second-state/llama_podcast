@@ -299,7 +299,7 @@ def auto_podcast(path):
         if script is None:
             return None
 
-        if lang == "en" and fish_api_key is not None:
+        if fish_api_key is not None:
             streaming_list_path = create_voice_fish(script, sub_topic_path)
         else:
             streaming_list_path = create_voice(script, sub_topic_path)
@@ -396,11 +396,19 @@ def auto_hot_search_podcast():
             logger.info(f"Writing query to {query_path}")
             with open(query_path, "w") as file:
                 file.write(topic)
+
             try:
-                auto_podcast(query_path)
+                report = get_report(topic)
+                report_path = f"./output/{local_time_str}{i}/report.txt"
+
+                with open(report_path, "w") as file:
+                    file.write(report)
+
+                auto_podcast(report_path)
             except Exception as e:
                 logger.error(f"Failed to auto podcast from {query_path}")
                 logger.error(e)
+
             i += 1
             time.sleep(sleep_sec)
 
@@ -449,14 +457,31 @@ def auto_file_podcast():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Auto Podcast")
     parser.add_argument(
-        "files", metavar="FILE", type=str, nargs="+", help="a file to be processed"
+        "files",
+        metavar="FILE",
+        type=str,
+        nargs="+",
+        help="a file to be processed",
+    )
+    parser.add_argument(
+        "--replay", action="store_true", help="replay the podcast from the file"
+    )
+    parser.add_argument(
+        "--auto-hot-search", action="store_true", help="auto podcast from hot search"
     )
 
     args = parser.parse_args()
-    # auto_hot_search_podcast()
+
+    if args.auto_hot_search:
+        auto_hot_search_podcast()
+        exit(0)
+
     for file_path in args.files:
         try:
-            auto_podcast(file_path)
+            if args.replay:
+                push_to_streaming_service_from_file(file_path)
+            else:
+                auto_podcast(file_path)
         except Exception as e:
             logger.error(f"Failed to auto podcast from {file_path}")
             logger.error(e)
